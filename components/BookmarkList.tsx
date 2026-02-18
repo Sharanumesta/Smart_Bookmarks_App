@@ -14,10 +14,10 @@ export default function BookmarkList({ user }: any) {
 
   const fetchBookmarks = useCallback(async () => {
     if (!user?.id) return
-    
+
     setLoading(true)
     setError(null)
-    
+
     try {
       const { data, error } = await supabase
         .from('bookmarks')
@@ -37,7 +37,9 @@ export default function BookmarkList({ user }: any) {
   }, [user?.id])
 
   useEffect(() => {
-    if (!user?.id) return
+    if (!user?.id) {
+      return
+    }
 
     let isSubscribed = true
 
@@ -65,15 +67,27 @@ export default function BookmarkList({ user }: any) {
 
             if (payload.eventType === 'INSERT') {
               setBookmarks(prev => {
-                if (prev.some(b => b.id === payload.new.id)) return prev
+                if (prev.some(b => b.id === payload.new.id)) {
+                  return prev
+                }
                 return [payload.new as any, ...prev]
               })
             } else if (payload.eventType === 'DELETE') {
-              setBookmarks(prev => prev.filter(b => b.id !== payload.old.id))
+              setBookmarks(prev => {
+                return prev.filter(b => b.id !== payload.old.id)
+              })
+            } else if (payload.eventType === 'UPDATE') {
+              setBookmarks(prev =>
+                prev.map(item =>
+                  item.id === payload.new.id ? payload.new as any : item
+                )
+              )
             }
           }
         )
-        .subscribe()
+        .subscribe((status) => {
+          console.log('📡 Subscription status:', status, 'for channel:', channelName)
+        })
 
       channelRef.current = channel
     }
@@ -102,14 +116,14 @@ export default function BookmarkList({ user }: any) {
     }
 
     setError(null)
-    
+
     try {
       const { data, error } = await supabase
         .from('bookmarks')
-        .insert([{ 
-          title: title.trim(), 
-          url: url.trim(), 
-          user_id: user.id 
+        .insert([{
+          title: title.trim(),
+          url: url.trim(),
+          user_id: user.id
         }])
         .select()
         .single()
@@ -127,7 +141,7 @@ export default function BookmarkList({ user }: any) {
 
   const deleteBookmark = async (id: string) => {
     const bookmarkToDelete = bookmarks.find(b => b.id === id)
-    
+
     setBookmarks(prev => prev.filter(b => b.id !== id))
     setError(null)
 
@@ -141,7 +155,7 @@ export default function BookmarkList({ user }: any) {
     } catch (error) {
       console.error('Error deleting bookmark:', error)
       setError('Failed to delete bookmark')
-      
+
       if (bookmarkToDelete) {
         setBookmarks(prev => [bookmarkToDelete, ...prev])
       }
@@ -151,7 +165,7 @@ export default function BookmarkList({ user }: any) {
   const handleLogout = async () => {
     const confirm = window.confirm('Are you sure you want to logout?')
     if (!confirm) return
-    
+
     try {
       if (channelRef.current) {
         await supabase.removeChannel(channelRef.current)
