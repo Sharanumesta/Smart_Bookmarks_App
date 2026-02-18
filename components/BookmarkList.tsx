@@ -51,6 +51,7 @@ export default function BookmarkList({ user }: any) {
       }
 
       const channelName = `bookmarks-${user.id}-${Date.now()}`
+      console.log('Creating channel:', channelName)
 
       const channel = supabase
         .channel(channelName)
@@ -86,7 +87,7 @@ export default function BookmarkList({ user }: any) {
           }
         )
         .subscribe((status) => {
-          console.log('📡 Subscription status:', status, 'for channel:', channelName)
+          console.log('Subscription status:', status, 'for channel:', channelName)
         })
 
       channelRef.current = channel
@@ -176,18 +177,36 @@ export default function BookmarkList({ user }: any) {
       setError('Failed to logout')
     }
   }
+  const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'User'
 
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-2xl mx-auto py-10 px-4">
+
+        {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-semibold">My Bookmarks</h1>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition duration-200 cursor-pointer"
-          >
-            Logout
-          </button>
+
+          <div>
+            <h1 className="text-2xl font-semibold">
+              My Bookmarks
+            </h1>
+            <p className="text-sm text-gray-800 mt-1">
+              Welcome back, <span className='font-bold'>{firstName}</span>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 text-sm font-medium text-red-600 
+                     bg-red-50 border border-red-200 rounded-lg 
+                     hover:bg-red-100 hover:border-red-300 
+                     transition duration-200 cursor-pointer"
+            >
+              Logout
+            </button>
+          </div>
+
         </div>
 
         <BookmarkForm onAdd={addBookmark} />
@@ -218,7 +237,9 @@ export default function BookmarkList({ user }: any) {
             />
           ))}
         </div>
+
       </div>
     </div>
+
   )
 }
